@@ -1,0 +1,96 @@
+Option Explicit
+dim file, Find1, Find2, CStr, obj, Comp, oFile, i, n, strToFind, filepath, objInputFile, tmpStr, TextToPaste, ts, Arr, CFile, AppD
+
+ Set obj = CreateObject("Scripting.FileSystemObject")
+ Set Comp  = WScript.CreateObject("WScript.Shell")
+ AppD = Comp.ExpandEnvironmentStrings("%AppData%")
+ file=""&AppD&"\1C\1CEStart\1cestart.cfg"
+ Find1="CommonCfgLocation=\\SPB1-FEBAPP01\1C_Platform\1C\common\1cescmn.cfg"
+ Find2="UseHWLicenses=0"
+  'Массив строк поиска
+ Arr = Array (file,Find1, Find2)
+ 'Количество строк для поиска в файле, в данном случае две Find и Find2
+ CStr = 2
+'***********Функция поиска строки в файле*****************
+' strToFind - что искать , filepath - где искать   
+Function Searchtext( strToFind, filepath)
+      Set objInputFile = obj.OpenTextFile(filepath, 1)
+       tmpStr = objInputFile.ReadAll
+       
+        If InStr(tmpStr, strToFind) <= 0 Then
+          'WScript.Echo "No matches"
+          Searchtext = 0
+           objInputFile.Close  
+        Else
+          'WScript.Echo "Found match"
+          Searchtext = 1   
+         'WScript.Echo tmpStr
+          objInputFile.Close
+        End If
+    End Function
+'***********Процедура вставки текста*****************
+Sub Addtext (TextToPaste, filepath)
+'WScript.Echo  TextToPaste, filepath
+Set ts = obj.OpenTextFile(filepath, 8)
+ts.Writeline(" ")
+ts.Writeline( TextToPaste )
+ts.close
+end Sub
+'*****************Функция проверки доступности файла***********************
+Function OpenFile( file )
+   For i = 0 To 30
+      On Error Resume Next
+      Set oFile = obj.OpenTextFile( file, 8 )
+      If Err.Number <> 0 Then
+        'WScript.Echo  "File " & file & " is locked and timeout was exceeded."
+          On Error Goto 0
+             Wscript.Sleep 100
+          OpenFile = 0   
+      else
+      'WScript.Echo  "File " & file & " is UNlocked ."
+        OpenFile = 1
+        oFile.close
+          Exit For
+       oFile.close
+       End If
+   Next 
+End Function
+'***********Функция создания файла *****************
+Function CreateFile( file )
+Set CFile = obj.CreateTextFile( File , False)
+For n = 1 To CStr
+CFile.WriteLine( Arr(n) )
+next
+CFile.close
+End Function
+'****************************************
+REM Проверка наличия фала 1cestart.cfg в папке пользователя
+'****************************************
+if obj.FileExists(file) then 
+    'WScript.Echo "File Exist"
+   '****************************************
+    REM  Проверка доступности файла 
+   '****************************************
+       if OpenFile (file) = 1 then
+          '****************************************
+          REM  Цикл проверки всех строк поиска
+          '****************************************        
+              For n = 1 To CStr
+                 '****************************************
+                  REM  Поиск строки в файле
+                '****************************************
+                  'Searchtext Arr(n), file
+                   'если строки нет то добавить если есть то возврат к переходу For
+                   if Searchtext (Arr(n), file) = 0 then 
+                        Call Addtext (Arr(n), file)
+                   end if
+               next
+         else  
+        'WScript.Echo  "File " & file & " is UNlocked ."
+         end if                 
+WScript.Quit
+else
+'WScript.Echo "File NOT Exist" 
+' Если файл не существует то выполняется функция создания нового
+CreateFile( file )
+end if
