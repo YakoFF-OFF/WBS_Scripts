@@ -5,7 +5,7 @@ dim file, Find1, Find2, CStr, obj, Comp, oFile, i, n, strToFind, filepath, objIn
  Set Comp  = WScript.CreateObject("WScript.Shell")
  AppD = Comp.ExpandEnvironmentStrings("%AppData%")
  file=""&AppD&"\1C\1CEStart\1cestart.cfg"
- Find1="CommonCfgLocation=\\SPB1-FEBAPP01\1C_Platform\1C\common\1cescmn.cfg"
+ Find1="CommonCfgLocation=\\"Server name"\1C_Platform\1C\common\1cescmn.cfg"
  Find2="UseHWLicenses=0"
   'Массив строк поиска
  Arr = Array (file,Find1, Find2)
